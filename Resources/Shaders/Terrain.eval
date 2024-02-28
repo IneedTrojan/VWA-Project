@@ -1,0 +1,44 @@
+#version 450
+
+layout(quads) in;
+
+// Ensure the Camera structure is defined and matches the one used in other shaders.
+struct Camera {
+    mat4 modelSpaceMatrix;
+    mat4 viewSpaceMatrix;
+    mat4 camSpaceMatrix;
+};
+
+// Ensure the CameraSSBO is defined consistently across all shaders.
+layout(std430, binding = 2) buffer CameraSSBO {
+    Camera cameraMatrices[];
+};
+
+in TCS_OUT {
+    vec2 uv;
+    vec3 worldPosition;
+} tes_in[];
+
+// Define individual output variables
+out vec2 out_uv;
+out vec3 out_worldPosition;
+
+uniform sampler2D heightMap;
+uniform float terrainHeight;
+
+void main() {
+    Camera cam = cameraMatrices[0];  // Use the first camera matrix.
+
+    vec2 uv = gl_TessCoord.xy;
+    float height = texture(heightMap, tes_in[0].uv + uv * (tes_in[1].uv - tes_in[0].uv)).r;
+
+    vec3 position = mix(mix(tes_in[0].worldPosition, tes_in[1].worldPosition, gl_TessCoord.x),
+                        mix(tes_in[2].worldPosition, tes_in[3].worldPosition, gl_TessCoord.x), gl_TessCoord.y);
+    position.z += height * terrainHeight; 
+
+    // Set the output variables
+    out_uv = uv;
+    out_worldPosition = position;
+
+    gl_Position = cam.camSpaceMatrix * vec4(position, 1.0);
+}

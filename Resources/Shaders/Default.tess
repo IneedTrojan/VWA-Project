@@ -1,0 +1,42 @@
+#version 450
+
+layout(vertices = 3) out;
+
+in VS_OUT {
+    mat3 TBN;
+    vec3 fragPos;
+    vec3 tangentViewPos;
+    vec3 tangentFragPos;
+    vec3 worldPosition;
+    vec2 uv;
+} tc_in[];
+
+out TC_OUT {
+    mat3 TBN;
+    vec3 fragPos;
+    vec3 tangentViewPos;
+    vec3 tangentFragPos;
+    vec3 worldPosition;
+    vec2 uv;
+} tc_out[];
+
+void main() {
+    // Set tessellation levels
+    if (gl_InvocationID == 0) {
+        gl_TessLevelInner[0] = 3.0;
+        gl_TessLevelOuter[0] = 3.0;
+        gl_TessLevelOuter[1] = 3.0;
+        gl_TessLevelOuter[2] = 3.0;
+    }
+    
+    // Pass through data to TES
+    tc_out[gl_InvocationID].TBN = tc_in[gl_InvocationID].TBN;
+    tc_out[gl_InvocationID].fragPos = tc_in[gl_InvocationID].fragPos;
+    tc_out[gl_InvocationID].tangentViewPos = tc_in[gl_InvocationID].tangentViewPos;
+    tc_out[gl_InvocationID].tangentFragPos = tc_in[gl_InvocationID].tangentFragPos;
+    tc_out[gl_InvocationID].worldPosition = tc_in[gl_InvocationID].worldPosition;
+    tc_out[gl_InvocationID].uv = tc_in[gl_InvocationID].uv;
+    
+    // Pass through the position data
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+}

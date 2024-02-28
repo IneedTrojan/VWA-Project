@@ -1,0 +1,30 @@
+#version 450
+
+layout(vertices = 4) out; // Assuming quad patches for tessellation
+
+in VS_OUT {
+    vec2 uv;
+    vec3 worldPosition;
+} tcs_in[];
+
+out TCS_OUT {
+    vec2 uv;
+    vec3 worldPosition;
+} tcs_out[];
+
+void main() {
+    // Pass through vertex data to TES
+    tcs_out[gl_InvocationID].uv = tcs_in[gl_InvocationID].uv;
+    tcs_out[gl_InvocationID].worldPosition = tcs_in[gl_InvocationID].worldPosition;
+
+    // Set tessellation levels
+    if (gl_InvocationID == 0) {
+        gl_TessLevelInner[0] = 8.0;
+        gl_TessLevelInner[1] = 8.0;
+        gl_TessLevelOuter[0] = 8.0;
+        gl_TessLevelOuter[1] = 8.0;
+        gl_TessLevelOuter[2] = 8.0;
+        gl_TessLevelOuter[3] = 8.0;
+    }
+
+}

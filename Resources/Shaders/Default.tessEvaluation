@@ -1,0 +1,40 @@
+#version 450
+
+layout(triangles, equal_spacing, ccw) in;
+
+in TC_OUT {
+    mat3 TBN;
+    vec3 fragPos;
+    vec3 tangentViewPos;
+    vec3 tangentFragPos;
+    vec3 worldPosition;
+    vec2 uv;
+} tes_in[];
+
+out FS_OUT {
+    mat3 TBN;
+    vec3 fragPos;
+    vec3 tangentViewPos;
+    vec3 tangentFragPos;
+    vec3 worldPosition;
+    vec2 uv;
+} tes_out;
+
+void main() {
+    // Barycentric coordinates for the tessellated point
+    float u = gl_TessCoord.x;
+    float v = gl_TessCoord.y;
+    float w = gl_TessCoord.z;
+
+    // Interpolating the attributes for the new vertex
+    tes_out.TBN = tes_in[0].TBN * u + tes_in[1].TBN * v + tes_in[2].TBN * w;
+    tes_out.fragPos = tes_in[0].fragPos * u + tes_in[1].fragPos * v + tes_in[2].fragPos * w;
+    tes_out.tangentViewPos = tes_in[0].tangentViewPos * u + tes_in[1].tangentViewPos * v + tes_in[2].tangentViewPos * w;
+    tes_out.tangentFragPos = tes_in[0].tangentFragPos * u + tes_in[1].tangentFragPos * v + tes_in[2].tangentFragPos * w;
+    tes_out.worldPosition = tes_in[0].worldPosition * u + tes_in[1].worldPosition * v + tes_in[2].worldPosition * w;
+    tes_out.uv = tes_in[0].uv * u + tes_in[1].uv * v + tes_in[2].uv * w;
+
+    // Calculate the final position of the vertex
+    vec3 finalPosition = tes_out.worldPosition; // Assuming worldPosition is the position
+    gl_Position = vec4(finalPosition, 1.0);
+}

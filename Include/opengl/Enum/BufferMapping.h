@@ -1,0 +1,17 @@
+#pragma once
+#include <glad/glad.h>
+#include "EnumMath.h"
+
+namespace graphics
+{
+	enum class BufferMapBits: uint32_t
+	{
+		READ_BIT = GL_MAP_READ_BIT,
+		WRITE_BIT = GL_MAP_WRITE_BIT,
+		INVALIDATE_RANGE_BIT = GL_MAP_INVALIDATE_RANGE_BIT,
+		INVALIDATE_BUFFER_BIT = GL_MAP_INVALIDATE_BUFFER_BIT,
+		FLUSH_EXPLICIT_BIT = GL_MAP_FLUSH_EXPLICIT_BIT,
+		UNSYNCHRONIZED_BIT = GL_MAP_UNSYNCHRONIZED_BIT
+	};
+	ENABLE_ENUM_MATH(BufferMapBits);
+}

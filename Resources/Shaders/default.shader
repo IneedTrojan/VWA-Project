@@ -1,0 +1,1 @@
+{"fragmentPath":"\\Shaders\\default.frag","vertexPath":"\\Shaders\\default.vert"}

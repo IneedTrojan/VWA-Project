@@ -138,6 +138,7 @@ namespace renderer
 		glm::ivec2 cameraScroll;
 		i32 face;
 		i32 textureLayer;
+		vec4 normalDistance;
 	};
 	
 
@@ -264,6 +265,12 @@ namespace renderer
 
 			return pixelPos.first;
 		};
+		i64vec2 get_scroll_not_fit(dvec3 cameraPos)const
+		{
+
+			i64vec2 pixelPos = i64vec2(worldPixelSpace[0] * dvec4(cameraPos, 1));
+			return pixelPos;
+		}
 		i64vec2 get_scroll(dvec3 cameraPos)const
 		{
 			
@@ -271,7 +278,7 @@ namespace renderer
 			pixelPos = pixelPos / 2ll * 2ll;
 			pixelPos = scrollBounds.fit(pixelPos);
 			return pixelPos;
-		};
+		}
 		
 		void set_scroll(i64vec2 pixelScroll)
 		{
@@ -340,12 +347,12 @@ namespace renderer
 		scene::SceneClass* m_scene = nullptr;
 
 
-		static constexpr i32 numFaces = 6;
+		static constexpr i32 numFaces = 1;
 
-		double worldSize = 10000;
-		double radius = worldSize/2;
+		double worldSize = 25000;
+		double radius = worldSize/2.0*0;
 
-		double minChunk = findNearestExp(worldSize, 2000);
+		double minChunk = findNearestExp(worldSize, 2);
 
 		
 
@@ -355,20 +362,18 @@ namespace renderer
 		std::shared_ptr<Texture> heightMap;
 
 		std::shared_ptr<Buffer> vertexFetchBuffer;
-		int32_t resolution = 512;
-		int32_t border_left = 8;
-		int32_t border_right = 9;
-		
+		int32_t resolution = 128;
+		int32_t border_left = 4;
+		int32_t border_right = 5;
 
 		std::array<Face, numFaces> faces;
 
 		
 
 
+		double terrainScale = 2000;
+		double terrainHeight = terrainScale;
 
-		
-
-		float terrainHeight = 100;
 		CameraComponent* camera;
 
 		Entity entity;
@@ -390,7 +395,7 @@ namespace renderer
 		{
 			if(faces.size() > 0)
 			{
-				faces[0] = Face(positive_y, negative_z, positive_x);
+				faces[0] = Face(positive_y, positive_x, positive_z);
 			}
 			if(faces.size()>5)
 			{
@@ -480,7 +485,7 @@ namespace renderer
 
 
 
-			heightMap = std::make_shared<Texture>(TextureTarget::Texture2DArray, TextureFormat::R16);
+			heightMap = std::make_shared<Texture>(TextureTarget::Texture2DArray, TextureFormat::R32F);
 			heightMap->TextureParams(glm::ivec3(resolution, resolution, layerCount));
 			heightMap->Allocate(sampler);
 
@@ -514,6 +519,8 @@ namespace renderer
 			vertexArrayTerrainShader->SetFloat("radius", radius);
 			vertexArrayTerrainShader->SetFloat("elevation", terrainHeight);
 			vertexArrayTerrainShader->BindTexture("heightmapTexture", heightMap);
+			vertexArrayTerrainShader->SetFloat("sizeMultiplier", minChunk);
+			vertexArrayTerrainShader->SetInt("numClipMaps", clipMapCount);
 
 		}
 
@@ -571,7 +578,7 @@ namespace renderer
 							culledArea.y0 = -dif.y + resolution / 4 + resolution / 4 + border_left / 2 + 2;
 							culledArea.x1 = -dif.x + resolution * 3 / 4 + resolution / 4 - border_right / 2 - 1;
 							culledArea.y1 = -dif.y + resolution * 3 / 4 + resolution / 4 - border_right / 2 - 1;
-							culledArea = culledArea.Transpose(i64vec2(-border_right/2ll +2));
+							culledArea = culledArea.Transpose(i64vec2(-border_right/2ll+1));
 							//culledArea = cm.textureBounds.convert<f64>().Scale(dvec2(0.5)).convert<i64>().Transpose(-dif+ cm.textureBounds.size());
 						}
 
@@ -581,6 +588,7 @@ namespace renderer
 						gpuClipMap.activeIndices = culledArea.convert<i32>();
 						gpuClipMap.textureLayer = cm.textureLayer;
 						gpuClipMap.face = cm.faceIndex;
+						gpuClipMap.normalDistance = vec4(terrainHeight/static_cast<double>(minChunk*(1<<i))*resolution/6.0);
 						levels.emplace_back(gpuClipMap);
 						empty = false;
 					}
@@ -610,6 +618,8 @@ namespace renderer
 				//worldGenShader->BindBufferRange("VertexFetchSSBO", *vertexFetchBuffer);
 				worldGenShader->Uniform3iv("resolution", &tempRes[0]);
 				worldGenShader->Uniform1dv("radius", &radius);
+				worldGenShader->Uniform1dv("terrainScale", &terrainScale);
+
 				heightMap->BindToImageUnit(1, WriteAccess::Writeonly);
 
 				worldGenShader->DispatchCompute(areas.size(), 1, 1);
@@ -639,7 +649,7 @@ namespace renderer
 			{
 				i64 offset = face * clipMapCount;
 				ClipMap first = clipMaps[offset];
-				i64vec2 clip_map_scroll = first.get_scroll_cube_sphere(cameraPosition);
+				i64vec2 clip_map_scroll = first.get_scroll_not_fit(cameraPosition);
 
 				for (int32_t clipmap_index = 0; clipmap_index < clipMapCount; clipmap_index++)
 				{
@@ -649,7 +659,7 @@ namespace renderer
 					//(cameraPosition.z - centerHeight) < (clipmap.IsActive ? clipmap.maxDistance  : clipmap.maxDistance / 1.2
 
 					i64vec2 old_scroll = clipmap.scroll;
-					i64vec2 i64_scroll = clipmap.scrollBounds.fit((clip_map_scroll / 2ll) * 2ll);//clipmap.get_scroll(cameraPosition, false).first;
+					i64vec2 i64_scroll = clipmap.get_scroll(cameraPosition);//clipmap.scrollBounds.fit((clip_map_scroll / 2ll) * 2ll);//clipmap.get_scroll(cameraPosition, false).first;
 
 					clip_map_scroll /= 2;
 

@@ -200,9 +200,11 @@ namespace component
 					float horizontal, vertical;
 					m_scene->inputSystem.getMovementInput(&horizontal, &vertical);
 					float vertical_z = static_cast<float>(m_scene->inputSystem.IsPressed(GLFW_KEY_R)- m_scene->inputSystem.IsPressed(GLFW_KEY_F));
-					
+
 
 					cameraController.Speed += static_cast<float>(m_scene->inputSystem.IsPressed(GLFW_KEY_K) - m_scene->inputSystem.IsPressed(GLFW_KEY_L))*(cameraController.Speed*0.01+0.001);
+
+
 
 					cameraController.Velocity += transform.RotatePoint(glm::vec3(vertical, vertical_z, horizontal) * cameraController.Speed);
 					cameraController.Velocity *= cameraController.Drag;

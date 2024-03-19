@@ -16,7 +16,7 @@
 #include "renderer/Renderer.h"
 
 #include "renderer/StandartRenderPipeline.h"
-
+#include "renderer/Animation.h"
 
 #include "renderer/GraphNode.h"
 
@@ -49,7 +49,7 @@ struct Vertex
 
 class Stopwatch
 {
-    
+
     std::chrono::high_resolution_clock::time_point begin;
 public:
     void start()
@@ -59,7 +59,7 @@ public:
     template<typename T>
     size_t elapsed()
     {
-        return std::chrono::duration_cast<T>( std::chrono::high_resolution_clock::now()- begin).count();
+        return std::chrono::duration_cast<T>(std::chrono::high_resolution_clock::now() - begin).count();
     }
 };
 
@@ -84,7 +84,7 @@ std::shared_ptr<Mesh> unitCube() {
     vertices.emplace_back(glm::vec3(-1, -1, 1));
     vertices.emplace_back(glm::vec3(1, -1, 1));
     vertices.emplace_back(glm::vec3(-1, 1, 1));
-    vertices.emplace_back(glm::vec3(1, 1, 1)); 
+    vertices.emplace_back(glm::vec3(1, 1, 1));
 
     std::vector<glm::uvec3> triangles;
 
@@ -116,7 +116,7 @@ std::shared_ptr<Mesh> unitCube() {
     mesh->SetIndexData(triangles);
     mesh->SetVertexData(vertices);
     mesh->Sync();
-    
+
 
     return mesh;
 }
@@ -284,7 +284,7 @@ static glm::dvec3 cubeSphereProjection(glm::dvec3 worldPosition, double radius, 
 
 struct Node
 {
-   
+
 
     Node* parent = nullptr;
     std::array<std::unique_ptr<Node>, 4> children;
@@ -443,7 +443,7 @@ struct Node
     ~Node() = default;
 };
 
-struct MeshGenerationJob: Async::IJob<MeshGenerationJob>
+struct MeshGenerationJob : Async::IJob<MeshGenerationJob>
 {
     struct Task
     {
@@ -493,7 +493,7 @@ struct MeshGenerationJob: Async::IJob<MeshGenerationJob>
         task.forward = glm::dvec4(forward, 0) * extends;
         task.right = glm::dvec4(right, 0) * extends;
         task.radius = size;
-        task.noiseScale = 0.05*task.radius;
+        task.noiseScale = 0.05 * task.radius;
         task.noiseHeight = 0.03;
         task.nodeExtends = extends;
 
@@ -552,13 +552,13 @@ struct MeshGenerationJob: Async::IJob<MeshGenerationJob>
     }
 
 
-   
+
 
 
     template<typename Vertex>
     static void CreatePlane(uint32_t res, Task& task, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
     {
-  
+
         for (uint32_t y = 0; y < res; y++)
         {
             for (uint32_t x = 0; x < res; x++)
@@ -584,7 +584,7 @@ struct MeshGenerationJob: Async::IJob<MeshGenerationJob>
                 auto applyNoise = [&](glm::dvec3 _worldPosition)
                     {
                         double noise0 = glm::perlin(_worldPosition / task.noiseScale);
-                        double noise1 = glm::perlin(_worldPosition / task.noiseScale*2.0)/2.0;
+                        double noise1 = glm::perlin(_worldPosition / task.noiseScale * 2.0) / 2.0;
                         double noise2 = glm::perlin(_worldPosition / task.noiseScale * 4.0) / 4.0;
                         double noise3 = glm::perlin(_worldPosition / task.noiseScale * 8.0) / 8.0;
                         double noise4 = glm::perlin(_worldPosition / task.noiseScale * 16.0) / 16.0;
@@ -592,7 +592,7 @@ struct MeshGenerationJob: Async::IJob<MeshGenerationJob>
 
 
 
-                        _worldPosition *= ((noise0+noise1+noise2+noise3+noise4+noise5) * task.noiseHeight/2.0) + (1.0- task.noiseHeight);
+                        _worldPosition *= ((noise0 + noise1 + noise2 + noise3 + noise4 + noise5) * task.noiseHeight / 2.0) + (1.0 - task.noiseHeight);
                         return _worldPosition;
                     };
 
@@ -642,9 +642,9 @@ struct MeshGenerationJob: Async::IJob<MeshGenerationJob>
 };
 
 
-struct AsyncTextureLoad: Async::IJob<AsyncTextureLoad>
+struct AsyncTextureLoad : Async::IJob<AsyncTextureLoad>
 {
-	asset::LoadedTexture textureAsset;
+    asset::LoadedTexture textureAsset;
     std::shared_ptr<Texture> texture;
 
     std::function< std::shared_ptr<Texture>()> createTexture;
@@ -682,8 +682,8 @@ class QuadTree
     std::unique_ptr<std::atomic_int32_t> activeJobs;
 
 
-   
-   
+
+
 public:
 
     QuadTree() = default;
@@ -724,7 +724,7 @@ public:
         while (!drawQueue.empty())
         {
             Node* node = drawQueue.front();
-            
+
             std::vector<LayoutDescriptor> layoutDescriptor{
                 attributePointer(Position, Vertex, position),
                 attributePointer(Normal, Vertex, normal),
@@ -735,8 +735,8 @@ public:
             std::shared_ptr<Mesh> mesh = Mesh::Create(sizeof(Vertex), layoutDescriptor);
 
             drawQueue.pop();
-            
-			MeshGenerationJob* job = new MeshGenerationJob();
+
+            MeshGenerationJob* job = new MeshGenerationJob();
             job->mesh = mesh;
             job->entity = Entity(entities);
             job->tbn = tbn;
@@ -837,10 +837,13 @@ static glm::dvec3 cubeSphereProjectioInverseFabiani(glm::dvec3 cam)
     double x_sqr = (squared.x - squared.y) + y_sqr;
     double z_sqr = 1;
 
-    return sqrt(glm::dvec3(x_sqr, y_sqr, z_sqr))*sign(cam);
+    return sqrt(glm::dvec3(x_sqr, y_sqr, z_sqr)) * sign(cam);
 }
+
+
 int main()
 {
+
     Async::SetWorkers(25);
 
     char currentDirectory[1024];
@@ -872,8 +875,8 @@ int main()
     path::Shortcuts::emplace("$ComputeShaders", [](std::string& str) {
         path::Shortcuts::replace(str, "$ComputeShaders", "$ProjectPath\\Resources\\ComputeShaders");
         });
-    
-   
+
+
 
 
     //OpenGLLogger::Instance().Init(asset::AssetPath("\\Debug\\open_gl_call.db"));
@@ -903,7 +906,7 @@ int main()
     auto transformComponent = &cameraEntity.get_or_emplace<Transform>();
 
     cameraComponent->initialize(90, 0.1f, 100000.0f, "Main", 100, pipeline.GetRenderTexture("GeometryTarget"));
-    cameraController->initialize(0.01f, 15.0f, 0.9f);
+    cameraController->initialize(0.003f, 0.001, 0.98f);
     transformComponent->Move(glm::vec3(1, 0, 0));
 
 
@@ -962,9 +965,9 @@ int main()
     cubemapSampler.minFilter = MinFilter::LINEAR;
     cubemapSampler.magFilter = MagFilter::LINEAR;
     cubemapSampler.cubeMapSeamless = SeamlessCubemap::ENABLED;
-  
-    
-    struct Scope: Async::IJob<Scope>
+
+
+    struct Scope : Async::IJob<Scope>
     {
         std::shared_ptr<Texture> cubemap;
         std::shared_ptr<Texture> texture;
@@ -987,13 +990,13 @@ int main()
         {
             texture->TextureParams(asset.getDim());
             texture->Allocate(sampler);
-            Texture::TextureSubImage3D(*texture,asset.pixels,  asset.pixelFormat, asset.pixelType);
+            Texture::TextureSubImage3D(*texture, asset.pixels, asset.pixelFormat, asset.pixelType);
             cubemap->TextureParams(1024, 1024);
             cubemap->Allocate(cubemapSampler);
 
 
             std::shared_ptr<shader::ComputeShader> program = shader::ShaderFactory::MakeComputeShader("$Shaders\\CubemapShader.vert");
-            
+
             program->Bind();
             cubemap->BindToImageUnit(0, WriteAccess::Writeonly, 0, 0);
             cubemap->BindToImageUnit(1, WriteAccess::Writeonly, 0, 1);
@@ -1011,7 +1014,7 @@ int main()
             program->Uniform2fv("equirectTextureGridSize", &tiling[0]);
 
             program->DispatchCompute(size.x / 16, size.y / 16, 1);
-        	return exit();
+            return exit();
         }
         ~Scope()
         {
@@ -1021,11 +1024,11 @@ int main()
 
     auto moon_albedo_cubeMap = std::make_shared<Texture>(TextureTarget::TextureCubeMap, TextureFormat::RGBA8);
     auto albedo_read = std::make_shared<Texture>(TextureTarget::Texture2DArray, TextureFormat::RGBA8);
-	Scope* scope = new Scope();
+    Scope* scope = new Scope();
     scope->cubemap = moon_albedo_cubeMap;
     scope->cubemapSampler = cubemapSampler;
     scope->sampler = defaultSampler;
-    scope->grid = {10,5};
+    scope->grid = { 10,5 };
     scope->tileWidth = 512;
     scope->texture = albedo_read;
     scope->path = "$Textures\\moon_albedo.tif";
@@ -1033,16 +1036,17 @@ int main()
 
 
 
-   
 
 
 
 
-  std::vector<std::unique_ptr<QuadTree>> Faces;
-  
-	for (size_t i = 0; i < 6; i++)
+
+
+    std::vector<std::unique_ptr<QuadTree>> Faces;
+
+    for (size_t i = 0; i < 6; i++)
     {
-		//Faces.emplace_back(new QuadTree());
+        //Faces.emplace_back(new QuadTree());
         //Faces.back()->Init(&scene.registry, matrices[i], 100, true, material);
     }
 
@@ -1050,7 +1054,7 @@ int main()
     float time = 0;
 
     auto prog =
-        shader::ShaderFactory::NewLoadShader("$ComputeShaders\\TemplateCubemap.vert", 
+        shader::ShaderFactory::NewLoadShader("$ComputeShaders\\TemplateCubemap.vert",
             shader::name("DefaultShader"),
             shader::replace("imageFormat", "rgba8")
         );
@@ -1061,57 +1065,138 @@ int main()
     size_t elapsed = 0;
     size_t frameCount = 0;
 
+
+
+
+
+
+
+    manim::Renderer manimRenderer;
+
+    manimRenderer.dotMaterial = shader::ShaderFactory::MakeMaterial(
+        shader::ShaderType::Vertex, "$Resources\\ManimShaders\\ManimPoint.vert",
+        shader::ShaderType::Fragment, "$Resources\\ManimShaders\\ManimPoint.frag",
+        shader::ShaderType::Geometry, "$Resources\\ManimShaders\\ManimPoint.geometry"
+    );
+
+    manimRenderer.lineMaterial = shader::ShaderFactory::MakeMaterial(
+        shader::ShaderType::Vertex, "$Resources\\ManimShaders\\ManimLine.vert",
+        shader::ShaderType::Fragment, "$Resources\\ManimShaders\\ManimLine.frag",
+        shader::ShaderType::Geometry, "$Resources\\ManimShaders\\ManimLine.geometry"
+
+    );
+
+
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    manim::Animation animation(cameraEntity);
+
+    /* auto fbo = scene.screen.GetMainFrameBuffer();
+
+       fbo->ClearColor(30, 30, 30, 255);
+
+
+       animation.tick(0.01f, manimRenderer);
+
+       manimRenderer.render(fbo);*/
+
+
     while (!glfwWindowShouldClose(scene.screen.get_GLFW_window()))
     {
-       /* for (float y = -1.0; y < 1; y += 0.1)
-        {
-            for (float x = -1.0; x < 1; x += 0.1)
-            {
-                glm::dvec3 pos = glm::dvec3(x, y, 1);
 
-                glm::dvec3 norm = cubeSphereProjection(pos);
-                glm::dvec3 reverse = cubeSphereProjectioInverseFabiani(norm);
+        renderer::Mesh::TriangleCount() = 0;
+        material->BindTexture("cubemap", moon_albedo_cubeMap);
 
-                renderer::Gizmos::Instance().DrawSphere(pos+glm::dvec3(0,0,0.02), glm::dvec3(0.01, 0.01, 0.01), glm::rgba8(0, 0, 255, 255));
+        scene.inputSystem.PollEvents();
 
-				renderer::Gizmos::Instance().DrawSphere(reverse, glm::dvec3(0.01, 0.01, 0.01), glm::rgba8(255, 0, 0, 255));
+        Async::WorkOnMainThread();
+
+        scene.componentSystems.ForEach([](component::SystemBase* sys) {sys->Update(); });
 
 
-            }
-        }
-*/
+        //scene.pipeline->Render();
+
+        auto fbo = scene.screen.GetMainFrameBuffer();
+
+       fbo->ClearColor(30, 30, 30, 255);
+
+       glm::vec3 v1(-0.5, -0.5, 0); // Example coordinates
+       glm::vec3 v2(0.5, -0.5, 0);
+       glm::vec3 v3(0.0, 0.5, 0);
 
 
-        
-       renderer::Mesh::TriangleCount() = 0;
-           material->BindTexture("cubemap", moon_albedo_cubeMap);
 
-           scene.inputSystem.PollEvents();
+       glm::u8vec4 pointColor = { 0, 255, 255, 255 }; // Bright Cyan
+       glm::u8vec4 lineColor = { 255, 165, 0, 255 }; // Soft Bright Orange
 
-           Async::WorkOnMainThread();
+       // Define the color and thickness of the lines
+       glm::u8 red = 255, green = 255, blue = 255; // White color
+       float thickness = 0.02f; // Example thickness
 
-           scene.componentSystems.ForEach([](component::SystemBase* sys) {sys->Update(); });
+       // Draw the triangle edges
+       manimRenderer.drawLine(v1, v2, lineColor.r, lineColor.g, lineColor.b, thickness);
+       manimRenderer.drawLine(v2, v3, lineColor.r, lineColor.g, lineColor.b, thickness);
+       manimRenderer.drawLine(v3, v1, lineColor.r, lineColor.g, lineColor.b, thickness);
 
-           scene.pipeline->Render();
+       // Optionally, draw dots at the vertices
+       float dotRadius = 0.1f; // Example dot radius
+       manimRenderer.drawDot(v1, dotRadius, pointColor.r, pointColor.g, pointColor.b);
+       manimRenderer.drawDot(v2, dotRadius, pointColor.r, pointColor.g, pointColor.b);
+       manimRenderer.drawDot(v3, dotRadius, pointColor.r, pointColor.g, pointColor.b);
 
-           glm::vec3 camPos = cameraEntity.get<Transform>().position();
-           for (auto& face : Faces)
-           {
-               if (face) face->Update(camPos.x, camPos.y, camPos.z, 1.5);
-           }
+       manimRenderer.render(fbo);
 
-           material->BindValue("iTime", &time);
-        
         scene.screen.SwapBuffers();
-        time += 0.01f;
-        if(frameCount++%100==0){
+
+
+
+
+        //glm::vec3 camPos = cameraEntity.get<Transform>().position();
+        //for (auto& face : Faces)
+        //{
+        //    if (face) face->Update(camPos.x, camPos.y, camPos.z, 1.5);
+        //}
+
+
+
+
+        material->BindValue("iTime", &time);
+        if (frameCount++ % 100 == 0) {
             size_t qs = watch.elapsed<std::chrono::microseconds>();
-            std::cout << "average frame time: " << qs/100 << "qs" << std::endl;
+            std::cout << "average frame time: " << qs / 100 << "qs" << std::endl;
             watch.start();
         }
-        
+
+
+
+
+
+
+        time += 0.01f;
+
 
     }
+
+    /* for (float y = -1.0; y < 1; y += 0.1)
+     {
+         for (float x = -1.0; x < 1; x += 0.1)
+         {
+             glm::dvec3 pos = glm::dvec3(x, y, 1);
+
+             glm::dvec3 norm = cubeSphereProjection(pos);
+             glm::dvec3 reverse = cubeSphereProjectioInverseFabiani(norm);
+
+             renderer::Gizmos::Instance().DrawSphere(pos+glm::dvec3(0,0,0.02), glm::dvec3(0.01, 0.01, 0.01), glm::rgba8(0, 0, 255, 255));
+
+             renderer::Gizmos::Instance().DrawSphere(reverse, glm::dvec3(0.01, 0.01, 0.01), glm::rgba8(255, 0, 0, 255));
+
+
+         }
+     }
+*/
+
     Async::CleanUp();
     return 0;
 }

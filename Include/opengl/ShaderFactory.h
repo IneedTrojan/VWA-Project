@@ -1767,6 +1767,11 @@ namespace shader {
 		}
 
 		const B* find(const A& key) const {
+
+			if (map.empty()) {
+				return nullptr;
+			}
+
 			auto it = map.find(key);
 			return it == map.end() ? nullptr : &Values[it->second];
 		}
@@ -2333,6 +2338,7 @@ namespace shader {
 		}
 		void Activate()const
 		{
+			directAccess.Bind();
 			for (const auto& property : properties)
 			{
 				if (property.IsActive)

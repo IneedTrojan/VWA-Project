@@ -458,7 +458,7 @@ namespace graphics
 			temp.initialize(cpy);
 			return temp;
 		}
-
+		
 	private:
 		VertexArray& initializeVAO(uint32_t mask)const
 		{

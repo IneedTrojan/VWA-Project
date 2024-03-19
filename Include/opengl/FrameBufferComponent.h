@@ -55,14 +55,14 @@ namespace graphics
 		{
 			FrameBufferObjectBase frameBuffer;
 			glCreateFramebuffers( 1, &frameBuffer.ID);
-			frameBuffer.Bind();
+
 			return std::make_unique<FrameBufferObjectBase>(std::move(frameBuffer));
 		}
 		static FrameBufferObjectBase CreateStack()
 		{
 			FrameBufferObjectBase frameBuffer;
+			
 			glCreateFramebuffers( 1, &frameBuffer.ID);
-			frameBuffer.Bind();
 			return frameBuffer;
 		}
 
@@ -96,10 +96,7 @@ namespace graphics
 				ID = 0;
 			}
 		}
-		void Bind()const
-		{
-			glBindFramebuffer( GL_FRAMEBUFFER, ID);
-		}
+		
 		uint32_t GetID()const
 		{
 			return ID;
@@ -237,6 +234,8 @@ namespace graphics
 			numMipMaps = mipMaps;
 			attachedTargets = 0ULL;
 			name = std::move(_name);
+			bindGlobal(this);
+
 		}
 
 

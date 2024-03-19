@@ -7,6 +7,8 @@
 namespace utility
 {
 
+
+
 	template<typename T = const void*>
 	struct const_span
 	{
@@ -172,5 +174,7 @@ namespace utility
 		const_iterator end() const { return end_ptr; }
 
 	};
+
+
 
 }

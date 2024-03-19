@@ -3,6 +3,7 @@
 #include "BufferObject.h"
 #include "math/BoundingBox.h"
 #include "opengl/Enum/Cullface.h"
+#include <type_traits>
 
 namespace graphics
 {
@@ -44,6 +45,7 @@ namespace graphics
 		std::shared_ptr<Buffer> vbo;
 		std::shared_ptr<Buffer> ebo;
 		DataType eboDataType;
+		size_t vertexSize;
 
 		math::AABB32 boundingBox;
 		size_t instanceCount = 1;
@@ -79,11 +81,40 @@ namespace graphics
 			cullFace = _cullFace;
 		}
 
+		template<typename T>
+		void push_back_vertex(const T& data) {
+			for (size_t i = 0; i < sizeof(T); i++) {
+				vertices.emplace_back(reinterpret_cast<const char*>(&data)[i]);
+			}
+			assert(vertices.size() / sizeof(T) * sizeof(T) == vertices.size());
+		}
+
+		template<typename T>
+			requires std::is_arithmetic_v<T>
+		void push_back_index(T index) {
+			for (size_t i = 0; i < sizeof(T); i++) {
+				indices.emplace_back(reinterpret_cast<const char*>(&index)[i]);
+			}
+			assert(vertices.size() / sizeof(T) * sizeof(T) == vertices.size());
+		}
+
+		size_t vertexCount() {
+			return vertices.size() / vertexSize;
+		}
+
+		void clear_vertices() {
+			vertices.clear();
+		}
+		void clear_indices() {
+			indices.clear();
+		}
+
 		void SetVertexData(utility::span<void> data)
 		{
 			vertices.resize(data.byteSize());
 			std::memcpy(vertices.data(), data.begin(), data.byteSize());
 		}
+
 		void SetIndexData(utility::span<void> data, DataType _eboDataType = DataType::uint32_t)
 		{
 			eboDataType = _eboDataType;
@@ -154,8 +185,25 @@ namespace graphics
 		}
 		void Sync(StorageHint storage = StorageHint::PRESETStaticDraw)
 		{
-			vbo->BufferData(vertices, storage);
-			ebo->BufferData(indices, storage);
+			if (vertices.size() != 0) {
+				if (vertices.size() > vbo->byteSize()) {
+					vbo->BufferData(vertices, storage);
+				}
+				else {
+					vbo->BufferSubData(vertices);
+				}
+			}
+			
+			if (indices.size() != 0) {
+				if (indices.size() > ebo->byteSize()) {
+					ebo->BufferData(indices, storage);
+				}
+				else {
+					ebo->BufferSubData(indices);
+				}
+			}
+			
+			
 		}
 
 		void Bind(uint32_t layoutMask)const
@@ -175,6 +223,19 @@ namespace graphics
 				DrawSingle(layoutMask);
 			}
 		}
+		void DrawVertices( uint32_t layoutMask, uint32_t offset = 0, uint32_t count = std::numeric_limits<uint32_t>::max() )const
+		{
+			Bind(layoutMask);
+			const GLenum drawMode = activate();
+			count = glm::min<glm::uint32_t>(vbo->byteSize() / vertexSize - offset, count);
+
+			glDrawArrays(
+				drawMode,
+				offset,
+				count
+			);
+		}
+		
 
 		void DrawSingle(uint32_t layoutMask)const {
 			Bind(layoutMask);
@@ -191,7 +252,6 @@ namespace graphics
 			);
 
 		}
-
 
 		void DrawInstanced(uint32_t layoutMask, size_t count)const {
 			Bind(layoutMask);
@@ -267,7 +327,11 @@ namespace graphics
 			{
 				vertexAttributeLayout.emplace_back(descriptor, BufferDescriptor(*vbo, 0, static_cast<int32_t>(structSize), 0));
 			}
+		
+
 			multiVAO.initialize(vertexAttributeLayout);
+
+			vertexSize = structSize;
 		}
 	};
 

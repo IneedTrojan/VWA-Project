@@ -44,6 +44,7 @@ namespace math
                 y0 <= other.y1 && y1 >= other.y0;
         }
 
+
         Bounds2D Scale(const glm::vec<2, T>& scaleFactor) const
         {
             glm::vec<2, T> center = GetCenter(); // Use the existing GetCenter method to find the center
@@ -56,6 +57,13 @@ namespace math
             T newY1 = center.y + heightHalf;
 
             return Bounds2D(newX0, newY0, newX1, newY1);
+        }
+
+        template<typename T>
+        requires (std::is_same_v<T, float> || std::is_same_v<T, double>)
+        glm::vec<2, T> lerp(T x, T y) {
+
+            return glm::vec<2, T>(x0, y0) + (glm::vec<2, T>(size()))*glm::vec<2, T>(x, y);
         }
 
         [[nodiscard]] static Bounds2D Union(const Bounds2D& a, const Bounds2D& b)
